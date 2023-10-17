@@ -3,6 +3,14 @@ from asyncio import StreamWriter
 
 
 class ClientAddrMap:
+    """
+    A coroutine-safe dictionary-like object that maps client IDs to their corresponding handlers.
+
+    Attributes:
+        _map (dict): A dictionary that maps client IDs to their corresponding handlers.
+        lock (asyncio.Lock): A lock that ensures thread safety when accessing the dictionary.
+    """
+
     def __init__(self):
         self._map: dict[str, StreamWriter] = {}
         self.lock = asyncio.Lock()
@@ -26,4 +34,5 @@ class ClientAddrMap:
             return list(self._map.keys())
 
 
+# Create an instance of the ClientAddrMap class to use throughout the program
 client_addr_map = ClientAddrMap()
