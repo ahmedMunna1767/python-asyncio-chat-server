@@ -1,0 +1,21 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "ChatterPy"
+description = "A simple chat server written in Python using asyncio and tcp sockets."
+authors = [{ name = "Ahmed Munna", email = "munnaa329@gmail.com" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = ["License :: OSI Approved :: MIT License"]
+dynamic = ["version"]
+
+[project.scripts]
+chatter-py = "server.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "server.__version__" }
+
+[tool.flit.module]
+name = "server"
