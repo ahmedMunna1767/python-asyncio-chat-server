@@ -22,7 +22,7 @@ class StreamWriterStore:
 
 
 class RecentMessagesStore:
-    def __init__(self, max_messages=10):
+    def __init__(self, max_messages: int):
         self.recent_messages: list[str] = []
         self.lock = asyncio.Lock()
         self.max_messages = max_messages
@@ -35,10 +35,9 @@ class RecentMessagesStore:
 
     async def send_recent_messages(self, writer):
         async with self.lock:
+            writer.write(f"{len(self.recent_messages)}\n".encode())
+            await writer.drain()
+
             for message in self.recent_messages:
                 writer.write(f"{message}\n".encode())
                 await writer.drain()
-
-
-writers_store = StreamWriterStore()
-recent_messages_store = RecentMessagesStore()

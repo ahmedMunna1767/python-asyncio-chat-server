@@ -1,35 +1,40 @@
 import asyncio
 
-from server.stores import recent_messages_store, writers_store
+from server.stores import RecentMessagesStore, StreamWriterStore
 from server.utils import generate_random_code
 
 
-async def tcp_request_handler(
-    reader: asyncio.StreamReader, writer: asyncio.StreamWriter
-):
-    writer.write("Hello from py-chatter 🤩. Please Enter your name: ".encode())
-    await writer.drain()
+class RequestHandler:
+    def __init__(self, history: int):
+        self.writers_store = StreamWriterStore()
+        self.recent_messages_store = RecentMessagesStore(history)
 
-    name = (await reader.read(100)).decode().strip()
-    id = name + "-" + generate_random_code()
-    print(f"New client connected with id: {id}")
+    async def callback(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
+        writer.write("Hello from py-chatter 🤩. Please Enter your name: ".encode())
+        await writer.drain()
 
-    await writers_store.add_writer(writer)
-    await recent_messages_store.send_recent_messages(writer)
+        name = (await reader.read(100)).decode().strip()
+        id = name + "-" + generate_random_code()
+        print(f"New client connected with id: {id}")
 
-    while True:
-        message = (await reader.readline()).decode().strip()
-        if message == "":
-            continue
+        await self.writers_store.add_writer(writer)
+        await self.recent_messages_store.send_recent_messages(writer)
 
-        print(f"New message from {id}: {message}")
+        while True:
+            message = (await reader.readline()).decode().strip()
+            if message == "":
+                continue
 
-        if message == "exit":
-            break
+            print(f"New message from {id}: {message}")
 
-        await recent_messages_store.add_message(f"{id}: {message}")
-        await writers_store.broadcast(f"{id}: {message}")
+            if message == "exit":
+                break
 
-    await writers_store.remove_writer(writer)
-    writer.close()
-    print(f"Client {id} disconnected")
+            await self.recent_messages_store.add_message(f"{id}: {message}")
+            await self.writers_store.broadcast(f"{id}: {message}")
+
+        await self.writers_store.remove_writer(writer)
+        writer.close()
+        print(f"Client {id} disconnected")
